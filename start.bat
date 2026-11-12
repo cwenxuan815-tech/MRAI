@@ -19,85 +19,112 @@ set "FRONTEND_DIR=%ROOT%frontend"
 set "PY=%BACKEND_DIR%\.venv\Scripts\python.exe"
 set "NODE_DIR=%ROOT%.tools\node"
 set "NODE_EXE="
+set "MISSING="
 
-rem ---------------- preflight: Python venv ----------------
+rem ---------------- preflight 1: Python venv ----------------
 if not exist "%PY%" (
-    echo [ERROR] Python venv not found: %PY%
-    echo.
-    echo   Create it once, then re-run this script:
-    echo     cd backend
-    echo     python -m venv .venv
-    echo     .venv\Scripts\python.exe -m pip install -r requirements.txt
-    echo     copy .env.example .env
-    echo.
-    pause
-    exit /b 1
+    set "MISSING=1"
+    echo [MISSING] Python venv
+    echo           ^-^> cd backend ^&^& python -m venv .venv
+    echo           ^-^> .venv\Scripts\python.exe -m pip install -r requirements.txt
 )
 
-rem ---------------- preflight: backend\.env ----------------
+rem ---------------- preflight 2: backend\.env ----------------
 if not exist "%BACKEND_DIR%\.env" (
-    echo [WARN]  backend\.env not found -- copy the template before the first run:
-    echo           copy backend\.env.example backend\.env
-    echo         Without it DIFY_MOCK defaults to false and uploads will try
-    echo         to reach a real Dify instance.
-    echo.
+    set "MISSING=1"
+    echo [MISSING] backend\.env
+    echo           ^-^> copy backend\.env.example backend\.env
+    echo           ^(without it DIFY_MOCK defaults to false and uploads will
+    echo            try to reach a real Dify instance^)
 )
 
-rem ---------------- resolve Node ----------------
+rem ---------------- preflight 3: Node ----------------
 if exist "%NODE_DIR%\node.exe" (
     set "NODE_EXE=%NODE_DIR%\node.exe"
-    echo [INFO]  Node: portable build ^(.tools\node^)
 ) else (
     for /f "delims=" %%N in ('where node 2^>nul') do if not defined NODE_EXE set "NODE_EXE=%%N"
-    if defined NODE_EXE (
-        echo [INFO]  Node: %NODE_EXE% ^(from PATH^)
-    )
+)
+rem  call echo: NODE_EXE is assigned inside the block above, so it must be
+rem  expanded at run time, not at parse time.
+if defined NODE_EXE (
+    call echo [OK]      Node: %%NODE_EXE%%
+) else (
+    set "MISSING=1"
+    echo [MISSING] Node.js 18+
+    echo           ^-^> install from https://nodejs.org, or unpack a portable build
+    echo             into .tools\node\ ^(looked for node.exe and "node" on PATH^)
 )
 
-if not defined NODE_EXE (
-    echo [ERROR] Node.js not found.
-    echo         Looked for "%NODE_DIR%\node.exe" and for "node" on PATH.
-    echo.
-    echo   Install Node 18+ from https://nodejs.org and re-run,
-    echo   or unpack a portable build into .tools\node\.
-    echo.
-    pause
-    exit /b 1
-)
-
-rem ---------------- preflight: frontend dependencies ----------------
+rem ---------------- preflight 4: frontend dependencies ----------------
 if not exist "%FRONTEND_DIR%\node_modules\vite\bin\vite.js" (
-    echo [ERROR] Frontend dependencies are missing: %FRONTEND_DIR%\node_modules
+    set "MISSING=1"
+    echo [MISSING] frontend\node_modules
+    echo           ^-^> cd frontend ^&^& npm install
+)
+
+if defined MISSING (
     echo.
-    echo   Install them once, then re-run this script:
-    echo     cd frontend
-    echo     npm install
+    echo Fix the items above once, then re-run start.bat.
     echo.
     pause
     exit /b 1
 )
 
 rem ---------------- Backend ----------------
+rem  A plain "port is listening" check is not enough: Docker Desktop and other
+rem  tools often hold 8000, and skipping on that false positive leaves the user
+rem  with a frontend talking to nothing. So probe the health endpoint instead.
+call :probe_backend
+if defined HEALTHY (
+    echo [SKIP]  Backend already running on port 8000 ^(health check ok^)
+    goto backend_done
+)
 call :is_listening 8000
 if "%LISTENING%"=="1" (
-    echo [SKIP]  Backend already running on port 8000
-) else (
-    echo [START] Backend  --^> http://127.0.0.1:8000
-    start "EVP-Backend-8000" /D "%BACKEND_DIR%" cmd /k ""%PY%" -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    echo [ERROR] Port 8000 is occupied, but /api/health does not answer.
+    echo         Another program is holding it -- Docker container, IDE,
+    echo         or a leftover process. Free the port, then re-run.
+    echo.
+    pause
+    exit /b 1
 )
+echo [START] Backend  --^> http://127.0.0.1:8000
+start "EVP-Backend-8000" /D "%BACKEND_DIR%" cmd /k ""%PY%" -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+:backend_done
 
 rem ---------------- Frontend ----------------
+call :probe_frontend
+if defined VITE_UP (
+    echo [SKIP]  Frontend already running on port 5173 ^(vite responds^)
+    goto frontend_done
+)
 call :is_listening 5173
 if "%LISTENING%"=="1" (
-    echo [SKIP]  Frontend already running on port 5173
-) else (
-    echo [START] Frontend --^> http://localhost:5173/patient/upload
-    start "EVP-Frontend-5173" /D "%FRONTEND_DIR%" cmd /k ""%NODE_EXE%" node_modules\vite\bin\vite.js"
+    echo [ERROR] Port 5173 is occupied, but it is not this Vite server.
+    echo         Free the port, then re-run.
+    echo.
+    pause
+    exit /b 1
 )
+echo [START] Frontend --^> http://localhost:5173/patient/upload
+start "EVP-Frontend-5173" /D "%FRONTEND_DIR%" cmd /k ""%NODE_EXE%" node_modules\vite\bin\vite.js"
+:frontend_done
 
 echo.
 echo Done. Run stop.bat to shut both services down.
 timeout /t 6 >nul
+exit /b 0
+
+:probe_backend
+set "HEALTHY="
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://127.0.0.1:8000/api/health'; if ($r.Content -match 'status.{1,4}ok') { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
+if %errorlevel%==0 set "HEALTHY=1"
+exit /b 0
+
+:probe_frontend
+set "VITE_UP="
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://127.0.0.1:5173/'; if ($r.Content -match 'vite') { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
+if %errorlevel%==0 set "VITE_UP=1"
 exit /b 0
 
 :is_listening

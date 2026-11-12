@@ -502,40 +502,40 @@ curl.exe -X POST http://127.0.0.1:8000/api/reports/EVT7A3F21/process `
 
 ## 常见问题
 
-**Q1：`start.bat` 报 `Python venv not found`？**
-尚未创建虚拟环境。按「快速开始」第 1 步执行 `python -m venv .venv` 并安装依赖。
+**Q1：`start.bat` 打印若干 `[MISSING]` 行而不是启动服务？**
+脚本在前置检查阶段把所有缺失项一次列全，每条下面都有对应命令。常见三项：未建 `.venv`、未从 `.env.example` 复制 `.env`、未装 `frontend/node_modules`。按提示做完再运行一次即可。
 
 **Q2：`start.bat` 报 `Node.js not found`？**
-脚本按「`.tools\node\node.exe` → PATH 中的 `node`」顺序查找，两者都没有就会退出。装一个 Node 18+ 即可，不需要把便携版放回仓库。
+脚本按「`.tools\node\node.exe` → PATH 中的 `node`」顺序查找，两者都没有才会退出。装一个 Node 18+ 即可，不需要把便携版放回仓库；启动成功时会回显实际使用的 node 路径。
 
-**Q2-1：`start.bat` 报 `Frontend dependencies are missing`？**
-克隆后还没装前端依赖，按「快速开始」第 2 步执行 `cd frontend && npm install`。
+**Q3：`start.bat` 报 `Port 8000 is occupied, but /api/health does not answer`？**
+8000 被别的程序占了（常见是 Docker 容器的端口映射、IDE 的内置服务或上次没退干净的进程）。**这不是「服务已在运行」**——脚本会真的去请求 `/api/health`，只有返回 `ok` 才判定为已在运行并跳过。用 `netstat -ano | findstr :8000` 找到 PID 后释放端口，或改掉占用方。
 
-**Q3：`stop.bat` 提示某端口「STILL in use」？**
+**Q4：`stop.bat` 提示某端口「STILL in use」？**
 该进程属于其它用户或提权会话，脚本不会仅凭端口强杀。关闭对应窗口，或以管理员身份重跑。
 
-**Q4：上传 PDF 返回 400？**
+**Q5：上传 PDF 返回 400？**
 当前只接受图片。Dify 起始节点的文件变量仅支持 image/audio，PDF 会在 Dify 侧被拒（400），因此上传层提前拦截。
 
-**Q5：上传返回 502「AI 分析失败」？**
+**Q6：上传返回 502「AI 分析失败」？**
 按顺序检查：`DIFY_API_KEY` 是否为空、`DIFY_ENDPOINT` 是否可达、两个输入变量名是否与 Workflow 定义完全一致、`DIFY_INPUT_FILE_IS_LIST` 是否与文件变量类型匹配。
 
-**Q6：改了 `.env` 但没有生效？**
+**Q7：改了 `.env` 但没有生效？**
 `--reload` 只监听 `.py` 文件。修改 `.env` 后必须手动重启后端进程。
 
-**Q7：医护端大屏不推送新报告？**
+**Q8：医护端大屏不推送新报告？**
 确认后端已启动、`/ws/doctor` 连接成功（浏览器开发者工具 Network → WS 可见）；若经过其他反向代理，需显式转发 `Upgrade` 头。
 
-**Q8：患者端页面顶部提示「本地演示数据」？**
+**Q9：患者端页面顶部提示「本地演示数据」？**
 说明后端不可用或返回 5xx，前端已降级到 localStorage 数据。恢复后端后刷新即可回到真实数据。医护端不做降级，失败会直接报错，以免用假数据误导。
 
-**Q9：大屏统计数字和自己预期不符？**
+**Q10：大屏统计数字和自己预期不符？**
 统计卡为**今日**口径（今日报告数、今日异常数、今日高风险患者去重数、当前待处理数）；饼图与科室柱状图为**累计**口径；趋势图为最近 7 天。口径不同，数字天然不等。
 
-**Q10：多开几个 Uvicorn worker 会怎样？**
+**Q11：多开几个 Uvicorn worker 会怎样？**
 不要这样做。连接池与广播在进程内存，多 worker 会导致部分医护端收不到推送；本系统按单进程设计。
 
-**Q11：可以直接部署到公网吗？**
+**Q12：可以直接部署到公网吗？**
 不可以。无认证、无权限、无 HTTPS、无审计，且 CORS 全放开。详见「部署与资产边界」。
 
 ## 许可证
