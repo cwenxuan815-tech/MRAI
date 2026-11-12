@@ -7,12 +7,12 @@
 | 项 | 内容 |
 |---|---|
 | 项目名称 | EVP：医疗检查报告智能分析与辅助决策平台（仓库名 `MRAI`） |
-| 文档版本 | v1.1（2026-11-12 16:55 修订：Dify 已从开发机移除，真实链路转为「不可验证」） |
-| 生成时间 | 2026-11-12 16:47（GMT+8），v1.1 修订于同日 16:55 |
-| 对应工程版本 | `b1c479f`（`main` 分支，已推送至 origin）；v1.1 同时改动 README 一处边界声明 |
+| 文档版本 | v1.2（2026-11-12 17:10 修订：补入 Mock 模式运行验证 19 项，改写「未验证」边界） |
+| 生成时间 | 2026-11-12 16:47（GMT+8）；v1.1 16:55、v1.2 17:10 |
+| 对应工程版本 | 代码基线 `a1f3cfd`（`main`，已推送 origin）；本档案 v1.2 自身的提交不在此列（避免哈希自引用），v1.2 仅改文档，未动业务代码 |
 | 远端仓库 | `https://github.com/cwenxuan815-tech/MRAI` |
-| 文档覆盖范围 | 2026-11-12 16:01–16:55 的 7 轮会话，以及会话期间对仓库源码的只读核查 |
-| 项目最终状态 | 代码已开源推送；应用本体在本次会话中**未被启动或运行验证**；真实 Dify 链路因服务下线而永久失去复现条件 |
+| 文档覆盖范围 | 2026-11-12 16:01–17:10 的 9 轮会话，含一轮真实运行验证（Mock 模式，17:00–17:04） |
+| 项目最终状态 | 代码已开源推送；Mock 全链路已实测跑通；真实 Dify 链路因服务下线永久失去复现条件；浏览器渲染层未验证 |
 
 ### 0.1 证据范围与限制（必读）
 
@@ -26,7 +26,7 @@
 
 1. 档案**不能**还原 9 月开发期的真实排障过程——那些报错、尝试和返工没有出现在本次会话里，我不掌握，也不会编造。
 2. 本档案第 10 章的问题案例，全部是**本次「仓库化与交付」阶段**真实发生的问题，不是开发期的问题。
-3. 应用功能本身（上传、Dify 调用、WebSocket 推送、前端页面）在本次会话中**只做了代码级阅读，没有运行验证**。凡是涉及「功能可用」的判断，一律标注为未验证。
+3. 应用功能本身（上传、Dify 调用、WebSocket 推送、前端页面）在 16:01–16:55 期间**只做了代码级阅读**；17:00 起补做了一轮 `DIFY_MOCK=true` 的实际运行（见 12.2，19 项），覆盖上传校验、Mock 分析、落库、广播、处置与统计接口。仍未验证的是浏览器渲染层与真实 Dify 调用。凡涉及未覆盖部分的「功能可用」判断，一律标注为未验证。
 
 **已确认无法访问的资料**：9 月的会话记录、当时的终端输出、Dify 平台侧的执行日志、任何历史版本的源码。工作区内也不存在测试报告或运行日志文件。
 
@@ -106,7 +106,7 @@
 3. 医护端能实时接收新报告并提交处置；
 4. 提供 Mock 模式，无 Dify 环境也能演示全流程。
 
-上述 4 条在代码中均有对应实现（详见第 5 章），但**本次会话未运行验证**。
+上述 4 条在代码中均有对应实现（详见第 5 章）。其中第 4 条与第 1–3 条在 Mock 模式下已于 17:00 实测跑通（12.2）；第 1 条的真实 Dify 分支、以及「患者能查看」的浏览器交互层，仍未验证。
 
 ### 3.2 本次会话（11-12）的需求
 
@@ -144,8 +144,9 @@
 
 ### 3.5 尚未实现 / 未验证
 
-- 应用能否正常启动 → **未运行**
-- 前端 `npm run build` 完整构建 → **未执行**（只跑了 `tsc --noEmit`）
+- 应用能否正常启动 → **已验证可启动**（17:00，Mock 模式，前后端均起，见 12.2）
+- 前端 `npm run build` 完整构建 → **已验证通过**（`vite build` 46.65s，产物 1.90MB）
+- 浏览器端渲染与交互 → **仍未验证**（无 headless 浏览器）
 - 真实 Dify 调用链路 → **未验证，且本机已不具备复现条件**（Dify 已从开发机移除）
 - LICENSE → 用户本轮明确只做 README 标记，未添加
 
@@ -214,25 +215,25 @@ EVP/
 
 | 产物 | 说明 | 验证状态 |
 |---|---|---|
-| Git 仓库 | `main` 分支，3 个提交，56 个文件 | 【已验证】`git log` / `git ls-files` |
+| Git 仓库 | `main` 分支，57 个跟踪文件，5 个提交（截至 `a1f3cfd`） | 【已验证】`git log` / `git ls-files` |
 | `.gitignore` | 12 个分区、覆盖 17 个被忽略条目 | 【已验证】`git check-ignore` 逐项 |
 | 脱敏源码 | `PatientAIChat.tsx` 移除硬编码地址 | 【已验证】`tsc --noEmit` 退出码 0 |
 | README | 537 → 539 行，按模板重写 | 【已验证】文件存在、标题层级核对 |
 | 远端仓库 | 公开可访问 | 【已验证】`ls-remote` + 网页抓取 |
 | 本档案 | `docs/PROJECT_LEARNING_GUIDE.md` | 写入后回读核对 |
 
-### 5.2 项目能力清单（按代码核对，未运行验证）
+### 5.2 项目能力清单（按代码核对 + 17:00 运行验证）
 
-| 模块 | 代码位置 | 状态 |
+| 模块 | 代码位置 | 状态（截至 v1.2） |
 |---|---|---|
-| 报告上传与校验 | `api/report.py:22-54` | 已实现，未运行验证 |
-| Dify 调用编排 | `services/report_service.py:206-297` | 已实现，未运行验证 |
-| 结果归一化 | `report_service.py:36-119` | 已实现，未运行验证 |
-| Mock 数据 | `services/mock_data.py` | 已实现，未运行验证 |
-| 医护端统计 | `report_service.py:437+` | 已实现，未运行验证 |
-| WebSocket 广播 | `services/ws_manager.py:38-60` | 已实现，未运行验证 |
-| 前端双端路由 | `frontend/src/App.tsx` | 已实现，未运行验证 |
-| 前端 Mock 降级 | `frontend/src/api/patient.ts`（据 ARCHITECTURE 记载） | 代码未逐行核对 |
+| 报告上传与校验 | `api/report.py:22-54` | **已实测**：200 / 400（PDF、空编号）/ 413（21MB） |
+| Dify 调用编排 | `services/report_service.py:206-297` | Mock 分支**已实测**；真实分支不可验证 |
+| 结果归一化 | `report_service.py:36-119` | 在 Mock payload 上**已跑通**；真实 Dify 返回未验证 |
+| Mock 数据 | `services/mock_data.py` | **已实测**三档轮转（末位 0/1/2 → green/yellow/red） |
+| 医护端统计 | `report_service.py:437+` | **已实测**：今日卡 3/2/1，`pending` 累计 44，饼图累计 |
+| WebSocket 广播 | `services/ws_manager.py:38-60` | **已实测**：connected / pong / event_created，无连接时跳过并记 warning |
+| 前端双端路由 | `frontend/src/App.tsx` | HTTP 层**已验证**（4 条路由 200）；渲染与交互未验证 |
+| 前端 Mock 降级 | `frontend/src/api/patient.ts`（据 ARCHITECTURE 记载） | **仍未验证**，需浏览器触发 |
 
 ### 5.3 明确的限制
 
@@ -350,7 +351,10 @@ sequenceDiagram
 | 7 | 16:28–16:31 | 重写 README | 按 TMF 结构写 537 行，逐条核对源码 | 修正 5 处与代码不符的描述 |
 | 8 | 16:33 | 推送 | `remote add` → `push -u origin main` | 成功，远端 SHA 与本地一致 |
 | 9 | 16:41 | 文档微调 | 结构树加 `[不在仓库中]` 标记 | `b1c479f` |
-| 10 | 16:47 | 生成本档案 | 证据盘点 + 撰写 | 本文档 |
+| 10 | 16:47 | 生成本档案 | 证据盘点 + 撰写 | 本文档 v1.0 |
+| 11 | 16:53 | 确认 Dify 已离线 | 用户告知 Dify 已从开发机移除 | 真实链路改为「不可验证」，v1.1 |
+| 12 | 17:00–17:04 | 补运行验证 | 本地改 `DIFY_MOCK=true`，起 uvicorn + vite，跑上传/广播/处置/统计/异常分支 | 19 项实测（12.2）；发现处置「200 静默幂等」、`pending` 口径落差、单包 1.90MB |
+| 13 | 17:10 | 按实测修订档案 | 改写 9 章证据级别、12 章验证结论、16 章遗留 | 本文档 v1.2 |
 
 ### 7.2 需要说明的时间线细节
 
@@ -451,13 +455,17 @@ sequenceDiagram
 
 ## 9. 核心模块逐步实现教程
 
-本章讲解的是**项目已有的实现**（通过读码还原），不是本次会话写下的代码。每一节标注证据来源。
+本章讲解的是**项目已有的实现**，不是本次会话写下的代码。
+
+证据强度分两级：9.1–9.3 已在 2026-11-12 17:00 以 `DIFY_MOCK=true` 实际运行并观察（详见 12.2），行为描述有日志与响应为证；**9.4 仍为读码推断**，未经运行验证——其中「后端 5xx 时患者端降级」这条尤其只是代码路径，不是观察结果。
 
 ### 9.1 上传入口：为什么校验要放在路由层
 
 **解决什么问题**：在付出任何 AI 调用成本之前，先把不合法的请求挡掉。
 
 **代码位置**：`backend/api/report.py:22-54`
+
+**【已验证事实】实测结果**：上传 `.pdf` 返回 400「不支持的文件类型 .pdf，仅支持 PNG / JPG」；`patient_id` 传纯空格返回 400「患者编号不能为空」；21MB 的 `.jpg` 返回 413「文件过大，最大支持 20MB」；正常图片 200。三条校验分支均已跑到，文案与代码一致。
 
 ```python
 # 简化示例：仅保留校验主干，实际文件见 backend/api/report.py
@@ -489,6 +497,8 @@ if len(content) > config.MAX_UPLOAD_SIZE:
 **解决什么问题**：把「落盘 → AI 分析 → 归一化 → 落库 → 广播」串成一次原子性尽量高的操作。
 
 **代码位置**：`backend/services/report_service.py:206-297`
+
+**【已验证事实】实测结果**：三次上传（P000/P001/P002）全部 200，日志依次输出「新报告已生成并广播: event_id=EVT9F995C level=green / EVT585B3E level=yellow / EVT80FABA level=red」，落在 `uploads/20261112/<uuid>.jpg`（无原文件名前缀，与 `uuid4().hex + 后缀` 一致），`report_event` 与 `file_record` 各新增 3 行且 `event_id` 无重复。六步链路按顺序成立。
 
 | 步 | 动作 | 关键点 |
 |---|---|---|
@@ -527,6 +537,8 @@ if not event_id or db.scalar(select(ReportEvent).where(ReportEvent.event_id == e
 
 **代码位置**：`backend/services/ws_manager.py`
 
+**【已验证事实】实测结果**：连接 `/ws/doctor` 立即收到 `{"type":"connected","data":{"connections":1}}`，发 `{"type":"ping"}` 收 `{"type":"pong"}`，监听期间上传 3 次收到 3 条 `event_created`。经 Vite 代理（`ws://127.0.0.1:5173/ws/doctor`）握手与广播同样正常。无连接时处置报告，日志打出「广播被跳过：当前无在线医护端连接（消息类型=report_processed）」，而 HTTP 仍返回 200——「广播是尽力而为」得到验证。
+
 ```python
 async def broadcast(self, message: dict) -> None:
     async with self._lock:
@@ -553,9 +565,9 @@ async def broadcast(self, message: dict) -> None:
 
 ### 9.4 前端：双端路由与降级策略
 
-**路由**（`frontend/src/App.tsx`）：`/patient/*` 三个页面套 `PatientLayout`，`/doctor/*` 三个页面套 `DoctorLayout`，`/` 与 `/patient` 重定向到 `/patient/upload`，其余走 404。
+**路由**（`frontend/src/App.tsx`）：`/patient/*` 三个页面套 `PatientLayout`，`/doctor/*` 三个页面套 `DoctorLayout`，`/` 与 `/patient` 重定向到 `/patient/upload`，其余走 404。**【已验证事实】** 4 条 SPA 路由经 Vite dev server 请求全部返回 200（`/patient/upload` 首次出现过一次连接失败，重试即 200，原因是 Vite 首次依赖预构建耗时）。
 
-**降级策略的不对称**（据 `ARCHITECTURE.md` 与本次未逐行核对的 `api/patient.ts`）：
+**降级策略的不对称**（据 `ARCHITECTURE.md` 与 `api/patient.ts` 的读码，未经运行验证）：
 
 | 端 | 后端失败时的行为 | 理由 |
 |---|---|---|
@@ -1024,6 +1036,20 @@ stored_name = f"{uuid4().hex}{suffix}"   # 32 位 uuid + 后缀，没有原文�
 
 四次返工里三次属于「顺序问题」而非「能力问题」——先做后想。这是本次最值得记录的流程教训。
 
+### 11.3 从「不做运行验证」到「补做运行验证」的方案变更
+
+| 项 | 内容 |
+|---|---|
+| 变更前 | v1.0 把「应用未运行」写成既定边界，理由是本次任务是仓库化与文档整理，起服务超出范围 |
+| 触发 | 用户先问「缺失的两项对文档影响大不大」，再明确要求「把那两件事都做了」 |
+| 变更后 | 17:00 起本地以 `DIFY_MOCK=true` 启动前后端，跑 19 项验证（12.2），并据此改写第 9、12、14、16 章 |
+| 代价 | 本地 `app.db` 新增 4 条测试事件与 1 条处置记录；`uploads/20261112/` 新增 4 张图（均在 `.gitignore` 内，未入库） |
+| 收益 | 三个此前只能推断的事实变成实测：Mock 三档轮转规则、广播语义、处置「200 静默幂等」 |
+
+**这次变更里有一次我自己的判断失误值得记录**：在 16:57 的回复中，我把「clean clone 跑一遍」和「验证真实 Dify」放在同一个待办里描述，导致用户得出「既然 Dify 已移除，那就补不上」的结论。实际上 Mock 模式不需要 Dify，全链路中可以验证的部分比我说的大得多。**把「不可验证」与「可验证但没做」混在一句话里，会让对方放弃本来能做的事**——这是沟通层面的错误，不是技术层面的。
+
+【事后分析】更合适的做法：在提出验证建议时，直接把验证项按「依赖什么」列表化，让用户看到哪几项其实不需要外部服务。本次 12.2 的表格就是这个形态，可惜是事后补的。
+
 ---
 
 ## 12. 测试、验证与验收证据
@@ -1044,42 +1070,71 @@ stored_name = f"{uuid4().hex}{suffix}"   # 32 位 uuid + 后缀，没有原文�
 | 远端与本地一致 | `git ls-remote origin` vs `git log` | SHA 相同 `2ce40288` | 命令输出 |
 | 仓库公开可访问 | 网页抓取 `github.com/.../MRAI` | 200，无登录墙 | 抓取结果 |
 
-### 12.2 未执行的验证（必须明确）
+### 12.2 运行验证（2026-11-12 17:00–17:04，Mock 模式）
+
+**【已验证事实】** 本节全部结论来自实际启动与请求，证据为 uvicorn 访问日志、HTTP 响应体与 `app.db` 查询结果。运行环境：本机 `E:\EVP`，`DIFY_MOCK=true`、`DIFY_MOCK_SCENARIO=auto`，未配置任何真实 Dify 服务。
+
+| # | 验证项 | 方法 | 实际结果 |
+|---|---|---|---|
+| 1 | 后端启动 | `python -m uvicorn main:app --host 127.0.0.1 --port 8000` | 成功；日志 `当前为 DIFY_MOCK 模拟模式（scene=auto）`、`上传目录: E:\EVP\uploads` |
+| 2 | 健康检查 | `GET /api/health` | `{"status":"ok","dify_mock":true,...}` |
+| 3 | 前端启动 | 便携版 Node 24.21.0 跑 `vite.js` | vite 5.4.21 就绪，`/` 返回 581 字节 index.html |
+| 4 | SPA 路由 | GET 四条路由 | `/patient/upload`、`/patient/history`、`/doctor/dashboard`、`/doctor/reports` 均 200 |
+| 5 | 生产构建 | `vite build` | 成功，46.65s；`dist` 产物 1.90MB（gzip 620.69kB），触发 >500kB 警告 |
+| 6 | 上传全流程 | 三次 `POST /api/reports/upload` | 均 200，分别产出 green / yellow / red |
+| 7 | Mock 三档规则 | 编号末位 0 / 1 / 2 | → green（alerts 0）/ yellow（1）/ red（2），与 `mock_data.py` 注释一致 |
+| 8 | WS 握手 | `ws://127.0.0.1:8000/ws/doctor` | 收到 `{"type":"connected","data":{"connections":1}}` |
+| 9 | 心跳 | 发 `{"type":"ping"}` | 收到 `{"type":"pong"}` |
+| 10 | 实时广播 | 监听期间上传 3 次 | 收到 3 条 `event_created`，与日志「新报告已生成并广播」逐条对应 |
+| 11 | 静态文件 | `GET /uploads/20261112/<uuid>.jpg` | 200，229,053 字节 |
+| 12 | 落库 | 直查 `app.db` | `report_event` 57、`file_record` 57、`treatment_record` 15；`event_id` 重复 0 条；`alerts` 以 JSON 文本存储（green 为 `[]`，长度 2） |
+| 13 | 报告详情 | `GET /api/reports/EVT80FABA` | 字段齐全，`files` 1 项、`treatments` 由 0 变 1 |
+| 14 | 医护处置 | `POST /{id}/process` `{"remark","result"}` | 200，`status=processed`，新增一条 treatment 记录 |
+| 15 | 处置幂等 | 同接口再提交 2 次 | 均 200，但 `treatments` 恒为 1；日志「报告已处置，跳过重复处理」 |
+| 16 | 校验与边界 | 5 个异常请求 | `.pdf`→400、空格编号→400、21MB→413、`page_size=101`→422、未知 event→404 |
+| 17 | 统计口径 | `GET /api/doctor/stats` | `total_today=3`、`abnormal_today=2`、`high_risk_patients=1`，而 `pending=44`；饼图为累计 30/15/12 |
+| 18 | 经 Vite 代理 | 从 5173 上传 + 连 WS | 上传 200（green），WS 收到 `connected` 与 `event_created` |
+| 19 | 无连接时处置 | 无 WS 连接时提交处置 | 日志「广播被跳过…（消息类型=report_processed）」，HTTP 仍 200 |
+
+**实测暴露的三个文档级事实**（不是 bug，但此前文档未写清）：
+
+1. **处置是「幂等 + 静默跳过」**：重复提交返回 **200**，响应体仍是最初那条记录，调用方无法从状态码区分「本次生效」与「之前已处理」。若前端要做二次确认提示，需要额外依据——目前没有。
+2. **`pending` 卡与其余统计卡口径不同**：同一次请求里 `total_today=3` 而 `pending=44`，因为前者按今天过滤、后者是「当前所有未处置」。这解释了 README 里那句容易误读的说明，实测数字是最直观的证据。
+3. **前端单包 1.90MB**：`vite build` 一次产出 3745 个模块、无代码分割，gzip 后 620kB。演示无感，但这是可量化的改进点（见 16.2）。
+
+### 12.3 仍未执行的验证（必须明确）
 
 | 项目 | 状态 | 说明 |
 |---|---|---|
-| 后端启动 | **未执行** | 本次会话从未运行 `uvicorn` |
-| 前端启动 | **未执行** | 未运行 `npm run dev` |
-| 前端完整构建 | **未执行** | 只跑了 `tsc --noEmit`，未跑 `vite build` |
-| 上传报告全流程 | **未执行** | 未调用 `/api/reports/upload` |
-| WebSocket 推送 | **未执行** | 未连接 `/ws/doctor` |
+| 浏览器端渲染与交互 | **未执行** | 无 headless 浏览器，前端只验证到 HTTP / 构建层 |
+| 前端 5xx 降级实际行为 | **未执行** | 需浏览器触发，`api/patient.ts` 的降级路径仍属读码 |
+| 患者端 AI 助手 iframe | **未执行** | 需配 `VITE_DIFY_WEBAPP_URL`，且依赖已下线的 Dify Agent |
+| 新克隆环境可运行性 | **未执行** | 本次在既有目录运行，`.venv` / `node_modules` / `.tools/node` 都在；clean clone 下 `start.bat` 会因缺 `.tools/node` 直接退出 |
+| `start.bat` 双击 | **未执行** | 只手工执行了脚本内的两条命令，未运行批处理本身 |
 | Dify 真实调用 | **不可执行** | 本次未调用；且 Dify 已从开发机移除，后续亦无法补验 |
-| Mock 三档场景 | **未执行** | 未验证 green/yellow/red 的实际返回（该路径不依赖 Dify，仍可执行） |
-| 数据库读写 | **未执行** | 未查询 `app.db` |
-| 页面渲染效果 | **未执行** | 未在浏览器中打开任何页面 |
-| 新克隆环境可运行性 | **未执行** | 未模拟 `git clone` 后按 README 操作 |
 
-【技术分析】这个空白是本次交付最大的证据缺口：**仓库「内容正确」已充分验证，但「能跑起来」完全没有验证**。README 里的启动步骤是按代码和脚本推断的，不是实测出来的。诚实的表述应该是：README 的步骤「据脚本与配置编写」，而不是「已验证可用」。
+【技术分析】2026-11-12 17:00 的这次运行把「能不能跑」从空白变成了部分已证：**Mock 全链路已实测通过，真实 Dify 段永久缺失，浏览器渲染层仍未覆盖**。README 的启动步骤现在有了实测支撑，但要限定在前端 HTTP 层与后端进程内，不能推广为「页面交互验证通过」。
 
-【技术分析】**这个缺口现在被永久分割成了两半，两半的可补性完全不同：**
+【技术分析】**缺口的最新形态：**
 
-| 链路片段 | 依赖 | 当前可补性 |
+| 链路片段 | 依赖 | 当前状态 |
 |---|---|---|
-| 启动 → 上传校验 → Mock 分析 → 落库 → WebSocket 推送 → 页面渲染 | 仅需 `.venv` + `node_modules` | **可补**，与 Dify 无关 |
-| 文件上传至 Dify → Workflow 调用 → 真实模型输出解析 | Dify 服务 + API Key + Workflow 定义 | **不可补**，服务已移除 |
+| 启动 → 上传校验 → Mock 分析 → 落库 → WebSocket 推送 → 静态图访问 | `.venv` + `node_modules` | **已实测通过**（12.2） |
+| 浏览器渲染、降级分支、iframe 助手 | 真实浏览器 + 可选 Dify | **仍未验证** |
+| 文件上传至 Dify → Workflow 调用 → 真实模型输出解析 | Dify 服务 + Key + Workflow | **不可验证**，服务已移除 |
 
-也就是说，「环境能不能跑起来」「前后端契不契合」「Mock 三档是否如注释所述轮转」这些问题依然可以用 `DIFY_MOCK=true` 实测；而「真实 Dify 返回的 JSON 能否被 `_normalize_*` 系列函数正确归一」只能永远停留在代码阅读层面。这个区分很重要——它决定了第 16 章哪些仍算待办，哪些应直接转为「已知不可验证」。
+也就是说，前后端契约、Mock 三档轮转、广播语义、统计口径这些最容易出错的地方现在有实测结论；剩下的是「页面长什么样、交互顺不顺」以及「真实 Dify 返回能否被正确归一」——前者属于表现层，后者属于永久空白。
 
-### 12.3 状态汇总
+### 12.4 状态汇总
 
 | 状态 | 数量 | 代表项 |
 |---|---|---|
-| 已实际验证通过 | 11 | 忽略规则、密钥扫描、类型检查、推送一致性 |
+| 已实际验证通过 | 30 | 交付侧 11 项 + 运行侧 19 项（12.2） |
 | 已实际验证失败 | 0 | — |
-| 已实现但未验证 | 7 | 应用启动、上传、推送、Mock 三档 |
+| 已实现但未验证 | 5 | 浏览器渲染、降级分支、iframe 助手、clean clone、`start.bat` 双击 |
 | 本机不可验证 | 1 | Dify 真实调用（服务已移除，见 0 章说明） |
 | 尚未实现 | 3 | LICENSE、`start.bat` fallback、CI |
-| 证据不足 | 1 | 前端降级逻辑的实际行为 |
+| 证据不足 | 0 | 原「前端降级逻辑」已归入未验证项 |
 
 ---
 
@@ -1185,7 +1240,7 @@ git add -A
 git commit -m "..."
 ```
 
-### 14.3 从仓库复现运行环境【建议命令，尚未验证】
+### 14.3 从仓库复现运行环境【命令已验证，clean clone 场景未验证】
 
 ```powershell
 git clone https://github.com/cwenxuan815-tech/MRAI.git
@@ -1207,7 +1262,18 @@ cd ..
 .\start.bat
 ```
 
-**已知会在这一步失败**：`start.bat` 硬依赖 `.tools\node\node.exe`，克隆环境没有该文件（C1 的代价）。绕过方式：安装 Node 18+ 后手动 `npm run dev`。
+**【已验证事实】** 2026-11-12 17:00 在本机按下列等价命令实际启动成功，`/api/health` 返回 `dify_mock:true`：
+
+```bash
+# 后端（工作目录 backend）
+.venv/Scripts/python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000
+# 前端（工作目录 frontend，使用便携版 Node）
+node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173
+```
+
+**但这不是 clean clone 验证**：本机的 `.venv`、`node_modules`、`.tools/node` 都已存在，`pip install` 与 `npm install` 两步**没有重跑**，Python/Node 版本也可能与你的机器不同。
+
+**已知会在这一步失败**：`start.bat` 硬依赖 `.tools\node\node.exe`，克隆环境没有该文件（C1 的代价）。绕过方式：安装 Node 18+ 后手动 `npm run dev`，或直接执行上面两条命令。
 
 ### 14.4 定位常见问题的最短路径
 
@@ -1259,7 +1325,7 @@ cd ..
 | 项 | 影响 | 建议 |
 |---|---|---|
 | `start.bat` 硬依赖未入库的 `.tools/node` | 新克隆用户第一条命令就失败 | 加 fallback：检测 `.tools/node/node.exe`，不存在则用 PATH 中的 `node` |
-| 应用从未实际运行验证 | 无法确认 README 步骤可用 | 在干净目录 clone 一次，**保持 `DIFY_MOCK=true`** 按 README 走完，记录实际报错。真实 Dify 段无法纳入（见下行） |
+| clean clone 可运行性未验证 | 本次运行复用了既有 `.venv`/`node_modules`，依赖安装步骤与脚本本身都没跑过 | 在干净目录 clone 一次，从 `pip install` 起走完；`start.bat` 需先解决下行问题 |
 | Dify 已从开发机移除 | 真实链路永久失去复现条件 | 无需修复，但必须在 README / 文档中如实声明；若日后重启该链路，需重新部署 Workflow 并重新验证解析逻辑 |
 
 ### 16.2 一般改进
@@ -1267,6 +1333,8 @@ cd ..
 | 项 | 影响 |
 |---|---|
 | `requirements.txt` 用 `>=` 无上界 | 后端依赖不可复现（本次实测已装到 fastapi 0.141.1） |
+| 前端产物单包 1.90MB（gzip 620kB），无代码分割 | 实测 `vite build` 触发 >500kB 警告，首屏加载偏重；演示场景无感 |
+| 处置接口重复提交返回 200 且静默跳过 | 调用方无法区分「本次生效」与「之前已处理」；若要前端提示需改 409 或在响应里带 `already_processed` 标记 |
 | 无 LICENSE | 公开发布但未声明授权范围 |
 | 无 CI | 无自动化的类型检查/构建/测试 |
 | README 中前端降级逻辑未逐行核对 | 存在与 C5 同类的文档偏差风险 |
@@ -1410,7 +1478,8 @@ cd ..
 
 ### 20.7 仍值得继续研究的问题
 
-- 如何在不启动服务的前提下验证「README 步骤可用」？本次的空白点。
+- 如何低成本验证「README 步骤在新环境可用」？本次在本机既有环境跑通了命令，但 `pip install`/`npm install`/`start.bat` 这条真正会出问题的路径仍需一次 clean clone 实测。
+- 浏览器渲染与降级分支能否用 Playwright 之类的工具纳入常规验证？本次没有可用工具，只能停在 HTTP 层。
 - 演示型项目的「无鉴权」边界，如何在不引入账号体系的情况下做到最低限度的访问控制？
 - Dify Workflow 输出的稳定性如何量化？目前只有防御代码，没有失败率数据。**注意：该问题在现有环境中已不可能通过实验回答**（服务已移除），只能作为设计层面的开放问题保留。
 
@@ -1422,8 +1491,8 @@ cd ..
 
 | 证据 | 位置/命令 | 支撑结论 |
 |---|---|---|
-| 提交历史 | `git log --format="%h %ad %s"` | 3 个提交及时间 |
-| 文件清单 | `git ls-files \| wc -l` | 56 个文件 |
+| 提交历史 | `git log --format="%h %ad %s"` | 5 个提交及时间（v1.0 写作时为 2 个） |
+| 文件清单 | `git ls-files \| wc -l` | 57 个跟踪文件（v1.0 时为 56，后新增本档案） |
 | 忽略清单 | `git status --ignored --porcelain` | 17 个被忽略条目 |
 | 体积 | `du -ch` / `du -sh` | 397K / 143M / 72M / 7.1M |
 | 扩展名限制 | `backend/config.py:71` | 仅 png/jpg/jpeg |
@@ -1432,6 +1501,12 @@ cd ..
 | 广播实现 | `backend/services/ws_manager.py:38-60` | 快照遍历 |
 | 前端地址改造 | `frontend/src/components/PatientAIChat.tsx` | 环境变量 + 空态 UI |
 | 推送结果 | `git ls-remote origin` | SHA 与本地一致 |
+| 运行日志 | uvicorn stdout，17:00–17:04 | Mock 启动、逐条广播、跳过重复处理、无连接时跳过广播 |
+| 上传响应 | `POST /api/reports/upload` ×3（P000/P001/P002） | green/yellow/red 与 alerts 0/1/2 |
+| WS 帧 | `websockets` 客户端记录 | `connected` / `pong` / `event_created` ×3 |
+| 落库结果 | `sqlite3` 查 `backend/database/app.db` | 57 / 57 / 15，`event_id` 无重复 |
+| 构建产物 | `vite build` 输出 | 1.90MB，gzip 620.69kB，46.65s |
+| 异常分支 | 5 个异常请求 | 400 / 400 / 413 / 422 / 404 |
 
 ### B. 提交信息与内容对照
 
