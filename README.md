@@ -288,12 +288,14 @@ POST /api/reports/upload
 │   ├── src/hooks/                useDoctorSocket.ts
 │   ├── src/constants/            medical.ts（等级与状态文案映射）
 │   └── vite.config.ts            开发代理（/api /uploads /ws）
-├── uploads/                      原始报告文件（运行时生成，不入库）
-├── .tools/node/                  便携版 Node（不入库）
+├── uploads/                      [不在仓库中] 原始报告文件（运行时生成）
+├── .tools/node/                  [不在仓库中] 便携版 Node（约 143MB）
 ├── start.bat / stop.bat          Windows 一键启停
 ├── ARCHITECTURE.md               架构与模块依赖
 └── PROJECT_TECHNICAL_DOCUMENT.md 技术交接文档
 ```
+
+> 标 `[不在仓库中]` 的目录被 `.gitignore` 排除，克隆后**并不存在**：`uploads/` 由后端首次启动自动创建，`.tools/node/` 需自行安装 Node 18+ 或放置便携版，否则 `start.bat` 无法启动前端。
 
 | 文件 | 作用 |
 |---|---|
