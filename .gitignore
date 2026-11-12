@@ -1,0 +1,57 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# ===== 环境变量（含真实密钥，禁止提交；仅保留 .env.example 模板）=====
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ===== 密钥 / 凭据 =====
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ===== 日志 =====
+logs/
+*.log
+
+# ===== 测试与评估产物 =====
+.pytest_cache/
+.coverage
+htmlcov/
+data/eval_results/
+*.tar
+*.tar.gz
+*.tgz
+
+# ===== 数据库与上传文件（运行时生成，含测试用患者报告，不入库）=====
+backend/database/*.db
+backend/database/*.db-journal
+uploads/
+
+# ===== 便携版 Node 运行时（约 143MB，请自行安装 Node 18+）=====
+.tools/
+
+# ===== 前端 =====
+node_modules/
+frontend/dist/
+.vite/
+
+# ===== 编辑器 / 系统 =====
+.idea/
+.vscode/
+.workbuddy/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 答辩材料（仅本地保留，不入库）=====
+PROJECT_TECHNICAL_DOCUMENT.docx
+医疗检查报告智能分析系统设计与实现_项目演讲稿.docx
+基于智能大模型的医疗报告分析与辅助决策系统_答辩稿.docx
