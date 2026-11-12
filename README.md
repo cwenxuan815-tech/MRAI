@@ -296,7 +296,7 @@ POST /api/reports/upload
 └── PROJECT_TECHNICAL_DOCUMENT.md 技术交接文档
 ```
 
-> 标 `[不在仓库中]` 的目录被 `.gitignore` 排除，克隆后**并不存在**：`uploads/` 由后端首次启动自动创建，`.tools/node/` 需自行安装 Node 18+ 或放置便携版，否则 `start.bat` 无法启动前端。
+> 标 `[不在仓库中]` 的目录被 `.gitignore` 排除，克隆后**并不存在**：`uploads/` 由后端首次启动自动创建；`.tools/node/` 是可选加速项——`start.bat` 会优先用便携版，找不到则自动回退到 PATH 中的 `node`（需 18+）。
 
 | 文件 | 作用 |
 |---|---|
@@ -319,11 +319,11 @@ POST /api/reports/upload
 |---|---|
 | OS | Windows 10/11（一键脚本为 Windows 专属，前后端本体跨平台） |
 | Python | 3.10+，本项目实测 3.14.7 |
-| Node | 18+，本项目实测 24.21.0（便携版位于 `.tools/node`，不入库） |
+| Node | 18+，本项目实测 24.21.0。**任意安装方式均可**：`start.bat` 优先用 `.tools/node`（不入库），没有则用 PATH 中的 `node` |
 | Dify | 可选。`DIFY_MOCK=true` 时无需真实实例 |
 | 依赖 | `backend/requirements.txt`、`frontend/package.json` |
 
-> 仓库不包含 `.venv`、`node_modules` 与 `.tools/node`。首次运行必须自行安装依赖，否则 `start.bat` 会因找不到 Python 解释器或 `node.exe` 直接报错退出。
+> 仓库不包含 `.venv`、`node_modules` 与 `.tools/node`。首次运行必须自行安装依赖；`start.bat` 会在前置检查阶段直接告诉你缺哪一项、该跑哪条命令，而不是弹出一堆看不懂的报错。
 
 ### 版本约束
 
@@ -505,8 +505,11 @@ curl.exe -X POST http://127.0.0.1:8000/api/reports/EVT7A3F21/process `
 **Q1：`start.bat` 报 `Python venv not found`？**
 尚未创建虚拟环境。按「快速开始」第 1 步执行 `python -m venv .venv` 并安装依赖。
 
-**Q2：`start.bat` 报 `Portable Node not found`？**
-一键脚本硬依赖 `.tools\node\node.exe`。二选一：把便携版 Node 放回该路径，或安装全局 Node 18+ 后手动 `npm run dev`，并相应修改 `start.bat` 中的 `NODE_DIR`。
+**Q2：`start.bat` 报 `Node.js not found`？**
+脚本按「`.tools\node\node.exe` → PATH 中的 `node`」顺序查找，两者都没有就会退出。装一个 Node 18+ 即可，不需要把便携版放回仓库。
+
+**Q2-1：`start.bat` 报 `Frontend dependencies are missing`？**
+克隆后还没装前端依赖，按「快速开始」第 2 步执行 `cd frontend && npm install`。
 
 **Q3：`stop.bat` 提示某端口「STILL in use」？**
 该进程属于其它用户或提权会话，脚本不会仅凭端口强杀。关闭对应窗口，或以管理员身份重跑。
